@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Historique des transactions{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Historique des transactions</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-history terminal-icon"></i>
+                <h3 class="terminal-title">Journal des opérations</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Consultation de l'historique</p>
+                <p style="color: var(--text-color);">Affichage des transactions récentes pour le compte {{ current_user.user_id }}.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Transactions</h3>
+                </div>
+                <div class="card-body">
+                    {% if transactions %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td style="color: {% if transaction.amount > 0 %}var(--success-color){% else %}var(--danger-color){% endif %}">
+                                        {{ transaction.amount|round(2) }} €
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>Aucune transaction trouvée.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

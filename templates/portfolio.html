@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Portefeuille{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 300px;
+        margin: 20px 0;
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        padding: 15px;
+    }
+    
+    .portfolio-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        flex: 1;
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin: 0 10px;
+        text-align: center;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .stat-card:first-child {
+        margin-left: 0;
+    }
+    
+    .stat-card:last-child {
+        margin-right: 0;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .asset-performance {
+        margin-top: 30px;
+    }
+    
+    .asset-card {
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 3px solid var(--primary-color);
+    }
+    
+    .asset-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .asset-name {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--primary-light);
+    }
+    
+    .asset-value {
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    .asset-change {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .asset-change.positive {
+        background-color: rgba(0, 204, 102, 0.2);
+        color: var(--success-color);
+    }
+    
+    .asset-change.negative {
+        background-color: rgba(220, 20, 60, 0.2);
+        color: var(--danger-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Évolution du portefeuille</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-chart-line terminal-icon"></i>
+                <h3 class="terminal-title">Analyse de performance</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde total: <span id="total-balance">{{ current_user.balance|round(2) }} €</span></p>
+                <p style="color: var(--text-color);">Visualisez l'évolution de votre portefeuille et la performance de vos investissements.</p>
+            </div>
+        </div>
+
+        <div class="portfolio-stats" style="margin-top: 30px;">
+            <div class="stat-card">
+                <div class="stat-label">Solde disponible</div>
+                <div class="stat-value">{{ current_user.balance|round(2) }} €</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Valeur des investissements</div>
+                <div class="stat-value" id="investment-value">0.00 €</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Performance globale</div>
+                <div class="stat-value" id="overall-performance">0.00%</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Évolution du solde</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="balanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Répartition des investissements</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="portfolioChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="asset-performance" style="margin-top: 30px;">
+            <h3>Performance par actif</h3>
+            <div id="assets-container">
+                <!-- Les actifs seront générés dynamiquement -->
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('invest') }}" class="btn btn-primary">
+                <i class="fas fa-chart-line"></i> Investir
+            </a>
+            <a href="{{ url_for('withdraw_investment') }}" class="btn btn-primary">
+                <i class="fas fa-money-bill-wave"></i> Retirer
+            </a>
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Données simulées pour l'évolution du solde
+        const balanceData = {
+            labels: generateDates(30),
+            datasets: [{
+                label: 'Solde (€)',
+                data: generateBalanceData(30, {{ current_user.balance }}),
+                borderColor: 'rgba(30, 136, 229, 1)',
+                backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        };
+        
+        // Données simulées pour la répartition du portefeuille
+        const portfolioData = {
+            labels: ['Liquidités', {% for asset, shares in current_user.get_wallet().items() %}'{{ asset }}', {% endfor %}],
+            datasets: [{
+                data: [{{ current_user.balance }}, {% for asset, shares in current_user.get_wallet().items() %}simulateAssetValue('{{ asset }}', {{ shares }}), {% endfor %}],
+                backgroundColor: [
+                    'rgba(30, 136, 229, 0.8)',
+                    'rgba(0, 204, 102, 0.8)',
+                    'rgba(255, 171, 0, 0.8)',
+                    'rgba(220, 20, 60, 0.8)',
+                    'rgba(156, 39, 176, 0.8)',
+                    'rgba(255, 87, 34, 0.8)',
+                    'rgba(0, 150, 136, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        // Créer le graphique d'évolution du solde
+        const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+        const balanceChart = new Chart(balanceCtx, {
+            type: 'line',
+            data: balanceData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Créer le graphique de répartition du portefeuille
+        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+        const portfolioChart = new Chart(portfolioCtx, {
+            type: 'doughnut',
+            data: portfolioData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Générer les cartes d'actifs
+        generateAssetCards();
+        
+        // Calculer et afficher la valeur totale des investissements
+        calculateInvestmentValue();
+        
+        // Fonctions utilitaires
+        function generateDates(days) {
+            const dates = [];
+            const today = new Date();
+            
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(today.getDate() - i);
+                dates.push(date.toLocaleDateString('fr-FR'));
+            }
+            
+            return dates;
+        }
+        
+        function generateBalanceData(days, currentBalance) {
+            const data = [];
+            let balance = currentBalance * 0.7; // Commencer à 70% du solde actuel
+            
+            for (let i = 0; i < days; i++) {
+                // Ajouter une variation aléatoire entre -3% et +5%
+                const change = balance * (Math.random() * 0.08 - 0.03);
+                balance += change;
+                data.push(balance);
+            }
+            
+            // S'assurer que le dernier point est le solde actuel
+            data[days - 1] = currentBalance;
+            
+            return data;
+        }
+        
+        function simulateAssetValue(asset, shares) {
+            // Simuler une valeur basée sur l'actif et le nombre de parts
+            const baseValues = {
+                'Bitcoin': 30000,
+                'Ethereum': 2000,
+                'Apple': 150,
+                'Tesla': 200,
+                'Microsoft': 300,
+                'Google': 2500,
+                'Alibaba': 100
+            };
+            
+            const baseValue = baseValues[asset] || 100;
+            return shares * baseValue;
+        }
+        
+        function generateAssetCards() {
+            const assetsContainer = document.getElementById('assets-container');
+            const wallet = {{ current_user.get_wallet()|tojson }};
+            
+            if (Object.keys(wallet).length === 0) {
+                assetsContainer.innerHTML = '<p>Vous n\'avez pas d\'investissements actifs.</p>';
+                return;
+            }
+            
+            for (const [asset, shares] of Object.entries(wallet)) {
+                const value = simulateAssetValue(asset, shares);
+                const change = (Math.random() * 20 - 10).toFixed(2); // Variation entre -10% et +10%
+                const isPositive = change >= 0;
+                
+                const assetCard = document.createElement('div');
+                assetCard.className = 'asset-card';
+                assetCard.innerHTML = `
+                    <div class="asset-header">
+                        <div class="asset-name">${asset}</div>
+                        <div class="asset-value">${value.toFixed(2)} €</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="chart-container" style="height: 150px;">
+                                <canvas id="chart-${asset}"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-4" style="display: flex; flex-direction: column; justify-content: center;">
+                            <p>Parts: ${shares.toFixed(4)}</p>
+                            <p>Prix unitaire: ${(value / shares).toFixed(2)} €</p>
+                            <div class="asset-change ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '+' : ''}${change}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                assetsContainer.appendChild(assetCard);
+                
+                // Créer un mini graphique pour chaque actif
+                setTimeout(() => {
+                    const ctx = document.getElementById(`chart-${asset}`).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: generateDates(14),
+                            datasets: [{
+                                label: `Prix de ${asset}`,
+                                data: generateAssetPriceData(14, value / shares, change),
+                                borderColor: isPositive ? 'rgba(0, 204, 102, 1)' : 'rgba(220, 20, 60, 1)',
+                                backgroundColor: isPositive ? 'rgba(0, 204, 102, 0.1)' : 'rgba(220, 20, 60, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: false
+                                },
+                                y: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }, 0);
+            }
+        }
+        
+        function generateAssetPriceData(days, currentPrice, percentChange) {
+            const data = [];
+            const totalChange = currentPrice * (percentChange / 100);
+            const startPrice = currentPrice - totalChange;
+            const step = totalChange / (days - 1);
+            
+            for (let i = 0; i < days; i++) {
+                // Ajouter une variation aléatoire pour rendre le graphique plus naturel
+                const noise = currentPrice * (Math.random() * 0.04 - 0.02);
+                const price = startPrice + (step * i) + noise;
+                data.push(price);
+            }
+            
+            // S'assurer que le dernier point est le prix actuel
+            data[days - 1] = currentPrice;
+            
+            return data;
+        }
+        
+        function calculateInvestmentValue() {
+            const wallet = {{ current_user.get_wallet()|tojson }};
+            let totalValue = 0;
+            
+            for (const [asset, shares] of Object.entries(wallet)) {
+                totalValue += simulateAssetValue(asset, shares);
+            }
+            
+            document.getElementById('investment-value').textContent = totalValue.toFixed(2) + ' €';
+            
+            // Calculer la performance globale (simulée)
+            const initialInvestment = totalValue * 0.9; // Simuler un investissement initial de 90% de la valeur actuelle
+            const performance = ((totalValue - initialInvestment) / initialInvestment) * 100;
+            const performanceElement = document.getElementById('overall-performance');
+            performanceElement.textContent = performance.toFixed(2) + '%';
+            performanceElement.style.color = performance >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+        }
+    });
+</script>
+{% endblock %}

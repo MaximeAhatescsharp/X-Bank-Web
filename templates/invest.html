@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Investir{% endblock %}
+
+{% block extra_css %}
+<style>
+    .asset-card {
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 3px solid var(--primary-color);
+        transition: transform 0.3s;
+    }
+    
+    .asset-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Investissements</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-chart-line terminal-icon"></i>
+                <h3 class="terminal-title">Plateforme d'investissement</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde disponible: {{ current_user.balance|round(2) }} €</p>
+                <p style="color: var(--text-color);">Sélectionnez un actif pour investir ou consultez les graphiques de performance.</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-4">
+                <h3>Actifs disponibles</h3>
+                {% for asset_name, ticker in assets.items() %}
+                <div class="asset-card" data-asset="{{ asset_name }}" data-ticker="{{ ticker }}">
+                    <h4>{{ asset_name }}</h4>
+                    <p>Ticker: {{ ticker }}</p>
+                    <button class="btn btn-primary btn-sm view-chart-btn" data-asset="{{ asset_name }}" data-ticker="{{ ticker }}">
+                        <i class="fas fa-chart-line"></i> Voir le graphique
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="col-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" id="chart-title">Sélectionnez un actif</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="investmentChart"></canvas>
+                        </div>
+                        <form id="investForm" method="POST" action="{{ url_for('buy_investment') }}" style="display: none;">
+                            <input type="hidden" id="asset" name="asset" value="">
+                            <div class="form-group">
+                                <label for="amount" class="form-label">Montant à investir (€)</label>
+                                <input type="number" id="amount" name="amount" class="form-control" min="0.01" step="0.01" max="{{ current_user.balance }}" required>
+                                <small style="color: var(--text-secondary);">Maximum: {{ current_user.balance|round(2) }} €</small>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Confirmer l'investissement
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('investmentChart').getContext('2d');
+        let chart = null;
+        
+        // Fonction pour charger les données d'un actif
+        function loadAssetData(asset, ticker) {
+            document.getElementById('chart-title').textContent = `Graphique de ${asset}`;
+            document.getElementById('asset').value = asset;
+            document.getElementById('investForm').style.display = 'block';
+            
+            fetch(`/invest/data/${ticker}`)
+                .then(response => response.json())
+                .then(data => {
+                    const dates = data.map(item => item.date);
+                    const prices = data.map(item => item.price);
+                    
+                    // Déterminer les couleurs en fonction de la tendance
+                    const colors = [];
+                    for (let i = 1; i < prices.length; i++) {
+                        if (prices[i] > prices[i-1]) {
+                            colors.push('rgba(0, 204, 102, 0.5)');
+                        } else {
+                            colors.push('rgba(220, 20, 60, 0.5)');
+                        }
+                    }
+                    colors.unshift(colors[0] || 'rgba(0, 204, 102, 0.5)');
+                    
+                    // Détruire le graphique existant s'il y en a un
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    // Créer un nouveau graphique
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: `Prix de ${asset}`,
+                                data: prices,
+                                borderColor: 'rgba(30, 136, 229, 1)',
+                                backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.1,
+                                pointBackgroundColor: colors
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: 'rgba(255, 255, 255, 0.7)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: 'rgba(255, 255, 255, 0.7)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Erreur lors du chargement des données:', error));
+        }
+        
+        // Ajouter des écouteurs d'événements aux boutons
+        document.querySelectorAll('.view-chart-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const asset = this.getAttribute('data-asset');
+                const ticker = this.getAttribute('data-ticker');
+                loadAssetData(asset, ticker);
+            });
+        });
+        
+        // Ajouter des écouteurs d'événements aux cartes d'actifs
+        document.querySelectorAll('.asset-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const asset = this.getAttribute('data-asset');
+                const ticker = this.getAttribute('data-ticker');
+                loadAssetData(asset, ticker);
+            });
+        });
+    });
+</script>
+{% endblock %}

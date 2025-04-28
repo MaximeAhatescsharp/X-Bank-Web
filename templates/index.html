@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Accueil{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <pre class="x-logo">
+██╗  ██╗    ██████╗  █████╗ ███╗   ██╗██╗  ██╗
+╚██╗██╔╝    ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝
+ ╚███╔╝     ██████╔╝███████║██╔██╗ ██║█████╔╝
+ ██╔██╗     ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗
+██╔╝ ██╗    ██████╔╝██║  ██║██║ ╚████║██║  ██╗
+╚═╝  ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+    </pre>
+    <h1 class="hero-title">Bienvenue sur X Bank</h1>
+    <h2 class="hero-subtitle">Votre banque en ligne moderne et sécurisée</h2>
+    
+    <div class="row">
+        <div class="col">
+            {% if current_user.is_authenticated %}
+                {% if current_user.permissions == 0 %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-block">Accéder au tableau de bord administrateur</a>
+                {% else %}
+                    <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary btn-block">Accéder à mon compte</a>
+                {% endif %}
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-block">Se connecter</a>
+            {% endif %}
+        </div>
+        <div class="col">
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('register') }}" class="btn btn-success btn-block">Ouvrir un compte</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-shield-alt terminal-icon"></i>
+                <h3 class="terminal-title">Sécurité maximale</h3>
+            </div>
+            <p>X Bank utilise les technologies les plus avancées pour protéger vos données et vos transactions. Votre sécurité est notre priorité absolue.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-chart-line terminal-icon"></i>
+                <h3 class="terminal-title">Investissements intelligents</h3>
+            </div>
+            <p>Faites fructifier votre argent avec nos options d'investissement diversifiées. Suivez vos performances en temps réel et prenez des décisions éclairées.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-gamepad terminal-icon"></i>
+                <h3 class="terminal-title">Jeux exclusifs</h3>
+            </div>
+            <p>Découvrez nos jeux exclusifs et tentez de gagner des récompenses. Une façon ludique d'interagir avec votre banque.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-hand-holding-usd terminal-icon"></i>
+                <h3 class="terminal-title">Prêts avantageux</h3>
+            </div>
+            <p>Besoin d'un coup de pouce financier ? Nos prêts à taux avantageux sont là pour vous aider à réaliser vos projets.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

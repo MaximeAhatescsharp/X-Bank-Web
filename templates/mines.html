@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Jeu de Mines{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mines-game-container {
+        padding: 20px;
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        margin-bottom: 30px;
+    }
+    
+    .mines-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin: 30px 0;
+    }
+    
+    .mines-cell {
+        aspect-ratio: 1;
+        background-color: var(--background-light);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-size: 24px;
+    }
+    
+    .mines-cell:hover {
+        background-color: var(--background-medium);
+    }
+    
+    .mines-cell.revealed-diamond {
+        background-color: var(--success-color);
+    }
+    
+    .mines-cell.revealed-mine {
+        background-color: var(--danger-color);
+    }
+    
+    .game-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .game-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    
+    .stat-box {
+        flex: 1;
+        padding: 15px;
+        background-color: var(--background-light);
+        border-radius: var(--border-radius);
+        margin: 0 10px;
+        text-align: center;
+    }
+    
+    .stat-box:first-child {
+        margin-left: 0;
+    }
+    
+    .stat-box:last-child {
+        margin-right: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Jeu de Mines</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-bomb terminal-icon"></i>
+                <h3 class="terminal-title">Stake Mines Game</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde disponible: <span id="balance">{{ balance|round(2) }}</span> €</p>
+                <p style="color: var(--text-color);">Évitez les mines et trouvez les diamants pour gagner des récompenses!</p>
+                <p style="color: var(--text-color);">Chaque diamant augmente votre multiplicateur. Encaissez vos gains avant de tomber sur une mine!</p>
+            </div>
+        </div>
+
+        <div class="mines-game-container" style="margin-top: 30px;">
+            <div class="game-controls">
+                <div>
+                    <label for="bet-amount" class="form-label">Montant du pari (€):</label>
+                    <input type="number" id="bet-amount" class="form-control" min="0.01" step="0.01" max="{{ balance }}" value="1">
+                </div>
+                <div>
+                    <label for="mine-count" class="form-label">Nombre de mines:</label>
+                    <input type="number" id="mine-count" class="form-control" min="1" max="24" value="6">
+                </div>
+                <div>
+                    <button id="start-button" class="btn btn-success">
+                        <i class="fas fa-play"></i> Commencer
+                    </button>
+                    <button id="cashout-button" class="btn btn-primary" disabled>
+                        <i class="fas fa-money-bill-wave"></i> Encaisser
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mines-grid" id="mines-grid">
+                <!-- Les cellules seront générées dynamiquement -->
+            </div>
+            
+            <div class="game-stats">
+                <div class="stat-box">
+                    <div>Cases révélées</div>
+                    <div id="revealed-count" style="font-size: 24px; font-weight: bold;">0</div>
+                </div>
+                <div class="stat-box">
+                    <div>Récompense actuelle</div>
+                    <div id="current-reward" style="font-size: 24px; font-weight: bold;">0.00 €</div>
+                </div>
+                <div class="stat-box">
+                    <div>Multiplicateur</div>
+                    <div id="multiplier" style="font-size: 24px; font-weight: bold;">1.00x</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-container" class="alert" style="display: none; margin-top: 20px;"></div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('games') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour aux jeux
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const minesGrid = document.getElementById('mines-grid');
+        const startButton = document.getElementById('start-button');
+        const cashoutButton = document.getElementById('cashout-button');
+        const betAmount = document.getElementById('bet-amount');
+        const mineCount = document.getElementById('mine-count');
+        const revealedCount = document.getElementById('revealed-count');
+        const currentReward = document.getElementById('current-reward');
+        const multiplier = document.getElementById('multiplier');
+        const resultContainer = document.getElementById('result-container');
+        const balanceDisplay = document.getElementById('balance');
+        
+        let gameActive = false;
+        let cells = [];
+        
+        // Générer la grille
+        function generateGrid() {
+            minesGrid.innerHTML = '';
+            cells = [];
+            
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'mines-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => revealCell(i));
+                minesGrid.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+        
+        // Initialiser le jeu
+        function initGame() {
+            const bet = parseFloat(betAmount.value);
+            const mines = parseInt(mineCount.value);
+            const balance = parseFloat(balanceDisplay.textContent);
+            
+            if (isNaN(bet) || bet <= 0 || bet > balance) {
+                alert('Montant de pari invalide!');
+                return;
+            }
+            
+            if (isNaN(mines) || mines < 1 || mines > 24) {
+                alert('Nombre de mines invalide!');
+                return;
+            }
+            
+            // Réinitialiser l'interface
+            generateGrid();
+            revealedCount.textContent = '0';
+            currentReward.textContent = '0.00 €';
+            multiplier.textContent = '1.00x';
+            resultContainer.style.display = 'none';
+            
+            // Désactiver les contrôles
+            startButton.disabled = true;
+            betAmount.disabled = true;
+            mineCount.disabled = true;
+            cashoutButton.disabled = false;
+            
+            // Envoyer la requête au serveur
+            fetch('/games/mines/init', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `bet_amount=${bet}&mine_count=${mines}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    gameActive = true;
+                } else {
+                    alert(data.message);
+                    resetGame();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                resetGame();
+            });
+        }
+        
+        // Révéler une cellule
+        function revealCell(index) {
+            if (!gameActive || cells[index].classList.contains('revealed-diamond') || cells[index].classList.contains('revealed-mine')) {
+                return;
+            }
+            
+            fetch('/games/mines/reveal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `position=${index}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const result = data.result;
+                    
+                    if (result.is_mine) {
+                        // C'est une mine
+                        cells[index].classList.add('revealed-mine');
+                        cells[index].innerHTML = '<i class="fas fa-bomb"></i>';
+                        
+                        // Mettre à jour le solde
+                        balanceDisplay.textContent = result.new_balance.toFixed(2);
+                        
+                        // Afficher le résultat
+                        resultContainer.className = 'alert alert-danger';
+                        resultContainer.innerHTML = `<i class="fas fa-bomb"></i> <strong>Boom!</strong> Vous avez perdu ${parseFloat(betAmount.value).toFixed(2)} €.`;
+                        resultContainer.style.display = 'block';
+                        
+                        // Terminer le jeu
+                        gameActive = false;
+                        resetGame();
+                    } else {
+                        // C'est un diamant
+                        cells[index].classList.add('revealed-diamond');
+                        cells[index].innerHTML = '<i class="fas fa-gem"></i>';
+                        
+                        // Mettre à jour les statistiques
+                        revealedCount.textContent = result.revealed;
+                        currentReward.textContent = `${result.reward.toFixed(2)} €`;
+                        
+                        // Calculer le multiplicateur
+                        const mult = result.reward / parseFloat(betAmount.value);
+                        multiplier.textContent = `${mult.toFixed(2)}x`;
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+        
+        // Encaisser les gains
+        function cashout() {
+            if (!gameActive) {
+                return;
+            }
+            
+            fetch('/games/mines/cashout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour le solde
+                    balanceDisplay.textContent = data.new_balance.toFixed(2);
+                    
+                    // Afficher le résultat
+                    resultContainer.className = 'alert alert-success';
+                    resultContainer.innerHTML = `<i class="fas fa-trophy"></i> <strong>Bravo!</strong> Vous avez encaissé ${currentReward.textContent}.`;
+                    resultContainer.style.display = 'block';
+                    
+                    // Terminer le jeu
+                    gameActive = false;
+                    resetGame();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+        
+        // Réinitialiser le jeu
+        function resetGame() {
+            startButton.disabled = false;
+            betAmount.disabled = false;
+            mineCount.disabled = false;
+            cashoutButton.disabled = true;
+            gameActive = false;
+        }
+        
+        // Événements
+        startButton.addEventListener('click', initGame);
+        cashoutButton.addEventListener('click', cashout);
+        
+        // Générer la grille initiale
+        generateGrid();
+    });
+</script>
+{% endblock %}

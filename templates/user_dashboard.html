@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Bienvenue, {{ current_user.name }} {{ current_user.surname }}</h2>
+    </div>
+    <div class="card-body">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-label">Solde actuel</div>
+                <div class="stat-value">{{ current_user.balance|round(2) }} €</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ID Utilisateur</div>
+                <div class="stat-value" style="font-size: 24px;">{{ current_user.user_id }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Niveau de confiance</div>
+                <div class="stat-value">{{ current_user.trust }}%</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <div class="terminal-section">
+                    <div class="terminal-header">
+                        <i class="fas fa-chart-line terminal-icon"></i>
+                        <h3 class="terminal-title">Services bancaires</h3>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('show_balance') }}" class="btn btn-primary" style="margin-bottom: 10px;">
+                            <i class="fas fa-wallet"></i> Voir mon solde
+                        </a>
+                        <a href="{{ url_for('invest') }}" class="btn btn-primary" style="margin-bottom: 10px;">
+                            <i class="fas fa-chart-line"></i> Investir
+                        </a>
+                        <a href="{{ url_for('withdraw_investment') }}" class="btn btn-primary" style="margin-bottom: 10px;">
+                            <i class="fas fa-money-bill-wave"></i> Retirer des investissements
+                        </a>
+                        <a href="{{ url_for('take_loan') }}" class="btn btn-primary" style="margin-bottom: 10px;">
+                            <i class="fas fa-hand-holding-usd"></i> Emprunter
+                        </a>
+                        <a href="{{ url_for('transfer_funds') }}" class="btn btn-primary" style="margin-bottom: 10px;">
+                            <i class="fas fa-exchange-alt"></i> Transférer des fonds
+                        </a>
+                        <a href="{{ url_for('view_transactions') }}" class="btn btn-primary">
+                            <i class="fas fa-history"></i> Historique des transactions
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="terminal-section">
+                    <div class="terminal-header">
+                        <i class="fas fa-gamepad terminal-icon"></i>
+                        <h3 class="terminal-title">Jeux</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Tentez votre chance avec nos jeux exclusifs et gagnez des récompenses!</p>
+                        <a href="{{ url_for('dice_game') }}" class="btn btn-success" style="margin-bottom: 10px;">
+                            <i class="fas fa-dice"></i> Jeu de Dés
+                        </a>
+                        <a href="{{ url_for('mines_game') }}" class="btn btn-success">
+                            <i class="fas fa-bomb"></i> Jeu de Mines
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="terminal-section" style="margin-top: 30px;">
+    <div class="terminal-header">
+        <i class="fas fa-terminal terminal-icon"></i>
+        <h3 class="terminal-title">Terminal X Bank</h3>
+    </div>
+    <div class="terminal-content">
+        <p style="color: var(--primary-color);">$ Connexion établie</p>
+        <p style="color: var(--text-color);">Bienvenue sur votre compte X Bank, {{ current_user.name }}.</p>
+        <p style="color: var(--text-color);">Dernière connexion: {{ current_user.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+        <p style="color: var(--primary-color);">$ Solde actuel: {{ current_user.balance|round(2) }} €</p>
+    </div>
+</div>
+{% endblock %}

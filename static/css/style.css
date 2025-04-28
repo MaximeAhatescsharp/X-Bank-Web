@@ -1,0 +1,550 @@
+/* Style général pour X-Bank */
+:root {
+  --primary-color: #1e88e5;
+  --primary-dark: #0d47a1;
+  --primary-light: #64b5f6;
+  --background-dark: #121212;
+  --background-medium: #1e1e1e;
+  --background-light: #2d2d2d;
+  --text-color: #ffffff;
+  --text-secondary: #b0b0b0;
+  --success-color: #00c853;
+  --danger-color: #ff1744;
+  --warning-color: #ffab00;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--background-dark);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header et navigation */
+.navbar {
+  background-color: var(--background-medium);
+  box-shadow: var(--box-shadow);
+  padding: 15px 0;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.navbar-logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo span {
+  margin-left: 10px;
+}
+
+.navbar-menu {
+  display: flex;
+  list-style: none;
+}
+
+.navbar-menu li {
+  margin-left: 20px;
+}
+
+.navbar-menu a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.navbar-menu a:hover {
+  color: var(--primary-color);
+}
+
+/* Cartes et conteneurs */
+.card {
+  background-color: var(--background-medium);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--background-light);
+  padding-bottom: 10px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--primary-light);
+  margin: 0;
+}
+
+.card-body {
+  padding: 10px 0;
+}
+
+/* Formulaires */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--background-light);
+  border-radius: var(--border-radius);
+  background-color: var(--background-light);
+  color: var(--text-color);
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Boutons */
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #00a844;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #d50000;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* Alertes et messages */
+.alert {
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+}
+
+.alert-success {
+  background-color: rgba(0, 200, 83, 0.2);
+  border: 1px solid var(--success-color);
+  color: var(--success-color);
+}
+
+.alert-danger {
+  background-color: rgba(255, 23, 68, 0.2);
+  border: 1px solid var(--danger-color);
+  color: var(--danger-color);
+}
+
+.alert-info {
+  background-color: rgba(30, 136, 229, 0.2);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-light);
+}
+
+/* Tableaux */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--background-light);
+}
+
+.table th {
+  background-color: var(--background-light);
+  color: var(--primary-light);
+  font-weight: 500;
+}
+
+.table tr:hover {
+  background-color: rgba(100, 181, 246, 0.1);
+}
+
+/* Grille */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+.col {
+  flex: 1;
+  padding: 10px;
+}
+
+.col-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+  padding: 10px;
+}
+
+.col-4 {
+  flex: 0 0 33.333333%;
+  max-width: 33.333333%;
+  padding: 10px;
+}
+
+.col-3 {
+  flex: 0 0 25%;
+  max-width: 25%;
+  padding: 10px;
+}
+
+/* Page d'accueil */
+.hero {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.hero-subtitle {
+  font-size: 24px;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+}
+
+/* Tableau de bord */
+.dashboard-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  flex: 1;
+  background-color: var(--background-medium);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin: 0 10px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
+
+.stat-card:first-child {
+  margin-left: 0;
+}
+
+.stat-card:last-child {
+  margin-right: 0;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 10px 0;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Jeux */
+.game-container {
+  background-color: var(--background-medium);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* Dice Game */
+.dice-line {
+  height: 20px;
+  background-color: var(--background-light);
+  border-radius: 10px;
+  position: relative;
+  margin: 40px 0;
+}
+
+.dice-cursor {
+  width: 10px;
+  height: 40px;
+  background-color: #888;
+  position: absolute;
+  top: -10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dice-red {
+  background-color: var(--danger-color);
+  height: 100%;
+  border-radius: 10px 0 0 10px;
+  position: absolute;
+  left: 0;
+}
+
+.dice-green {
+  background-color: var(--success-color);
+  height: 100%;
+  border-radius: 0 10px 10px 0;
+  position: absolute;
+  right: 0;
+}
+
+/* Mines Game */
+.mines-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mines-cell {
+  aspect-ratio: 1;
+  background-color: var(--background-light);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.mines-cell:hover {
+  background-color: var(--background-medium);
+}
+
+.mines-cell.revealed-diamond {
+  background-color: var(--success-color);
+}
+
+.mines-cell.revealed-mine {
+  background-color: var(--danger-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .col-6, .col-4, .col-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .dashboard-stats {
+    flex-direction: column;
+  }
+  
+  .stat-card {
+    margin: 0 0 10px 0;
+  }
+  
+  .navbar-container {
+    flex-direction: column;
+  }
+  
+  .navbar-menu {
+    margin-top: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .navbar-menu li {
+    margin: 5px 10px;
+  }
+  
+  .hero-title {
+    font-size: 36px;
+  }
+  
+  .hero-subtitle {
+    font-size: 18px;
+  }
+}
+
+/* Logo X-Bank */
+.x-logo {
+  font-family: monospace;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-align: center;
+  margin: 20px 0;
+  white-space: pre;
+}
+
+/* Terminal style pour les sections */
+.terminal-section {
+  background-color: var(--background-medium);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-left: 3px solid var(--primary-color);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.terminal-icon {
+  color: var(--primary-color);
+  margin-right: 10px;
+}
+
+.terminal-title {
+  font-family: monospace;
+  font-size: 18px;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.terminal-content {
+  font-family: monospace;
+  padding: 10px;
+  background-color: var(--background-dark);
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+}
+
+/* Animation de chargement */
+.loading {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 20px;
+}
+
+.loading div {
+  position: absolute;
+  top: 8px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.loading div:nth-child(1) {
+  left: 8px;
+  animation: loading1 0.6s infinite;
+}
+
+.loading div:nth-child(2) {
+  left: 8px;
+  animation: loading2 0.6s infinite;
+}
+
+.loading div:nth-child(3) {
+  left: 32px;
+  animation: loading2 0.6s infinite;
+}
+
+.loading div:nth-child(4) {
+  left: 56px;
+  animation: loading3 0.6s infinite;
+}
+
+@keyframes loading1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes loading3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
+@keyframes loading2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(24px, 0);
+  }
+}

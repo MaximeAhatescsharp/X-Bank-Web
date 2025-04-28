@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Jeux{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Espace de jeux</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-gamepad terminal-icon"></i>
+                <h3 class="terminal-title">Zone de divertissement</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde disponible: {{ current_user.balance|round(2) }} €</p>
+                <p style="color: var(--text-color);">Bienvenue dans l'espace de jeux de X Bank. Tentez votre chance et gagnez des récompenses!</p>
+                <p style="color: var(--text-color);">Attention: Jouez de manière responsable.</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Jeu de Dés</h3>
+                    </div>
+                    <div class="card-body" style="text-align: center;">
+                        <img src="{{ url_for('static', filename='images/dice_game.png') }}" alt="Jeu de Dés" style="max-width: 100%; height: 200px; object-fit: contain; margin-bottom: 20px;">
+                        <p>Placez votre curseur sur la ligne et pariez sur la position de la flèche!</p>
+                        <a href="{{ url_for('dice_game') }}" class="btn btn-success btn-block">
+                            <i class="fas fa-dice"></i> Jouer aux Dés
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Jeu de Mines</h3>
+                    </div>
+                    <div class="card-body" style="text-align: center;">
+                        <img src="{{ url_for('static', filename='images/mines_game.png') }}" alt="Jeu de Mines" style="max-width: 100%; height: 200px; object-fit: contain; margin-bottom: 20px;">
+                        <p>Évitez les mines et trouvez les diamants pour gagner des récompenses!</p>
+                        <a href="{{ url_for('mines_game') }}" class="btn btn-success btn-block">
+                            <i class="fas fa-bomb"></i> Jouer aux Mines
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-top: 30px;">
+            <p><i class="fas fa-info-circle"></i> <strong>Règles des jeux</strong></p>
+            <p><strong>Jeu de Dés:</strong> Placez le curseur sur la ligne pour définir votre zone de pari. Plus la zone verte est petite, plus le gain potentiel est élevé. Si la flèche atterrit dans la zone verte, vous gagnez!</p>
+            <p><strong>Jeu de Mines:</strong> Choisissez le nombre de mines et votre mise. Cliquez sur les cases pour révéler des diamants. Chaque diamant augmente votre multiplicateur. Encaissez vos gains avant de tomber sur une mine!</p>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

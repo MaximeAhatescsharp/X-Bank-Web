@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Jeu de Dés{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dice-game-container {
+        padding: 20px;
+        background-color: var(--background-medium);
+        border-radius: var(--border-radius);
+        margin-bottom: 30px;
+    }
+    
+    .dice-line-container {
+        position: relative;
+        height: 100px;
+        margin: 40px 0;
+    }
+    
+    .dice-line {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 20px;
+        background-color: var(--background-light);
+        border-radius: 10px;
+        transform: translateY(-50%);
+    }
+    
+    .dice-red {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: var(--danger-color);
+        border-radius: 10px 0 0 10px;
+    }
+    
+    .dice-green {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        background-color: var(--success-color);
+        border-radius: 0 10px 10px 0;
+    }
+    
+    .dice-cursor {
+        position: absolute;
+        top: 50%;
+        width: 10px;
+        height: 40px;
+        background-color: #888;
+        transform: translateY(-50%);
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .dice-arrow {
+        position: absolute;
+        top: 50%;
+        width: 5px;
+        height: 60px;
+        background-color: var(--primary-color);
+        transform: translateY(-50%);
+        border-radius: 5px;
+        display: none;
+    }
+    
+    .dice-percentage {
+        position: absolute;
+        top: -30px;
+        transform: translateX(-50%);
+        font-weight: bold;
+        color: var(--text-color);
+    }
+    
+    .game-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .game-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+    
+    .stat-box {
+        flex: 1;
+        padding: 15px;
+        background-color: var(--background-light);
+        border-radius: var(--border-radius);
+        margin: 0 10px;
+        text-align: center;
+    }
+    
+    .stat-box:first-child {
+        margin-left: 0;
+    }
+    
+    .stat-box:last-child {
+        margin-right: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Jeu de Dés</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-dice terminal-icon"></i>
+                <h3 class="terminal-title">Stake Dice Game</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde disponible: <span id="balance">{{ balance|round(2) }}</span> €</p>
+                <p style="color: var(--text-color);">Placez le curseur sur la ligne pour définir votre zone de pari.</p>
+                <p style="color: var(--text-color);">Plus la zone verte est petite, plus le gain potentiel est élevé.</p>
+            </div>
+        </div>
+
+        <div class="dice-game-container" style="margin-top: 30px;">
+            <div class="game-controls">
+                <div>
+                    <label for="bet-amount" class="form-label">Montant du pari (€):</label>
+                    <input type="number" id="bet-amount" class="form-control" min="0.01" step="0.01" max="{{ balance }}" value="1">
+                </div>
+                <div>
+                    <button id="bet-button" class="btn btn-success">
+                        <i class="fas fa-dice"></i> Parier
+                    </button>
+                </div>
+            </div>
+            
+            <div class="dice-line-container">
+                <div class="dice-line">
+                    <div class="dice-red" id="red-zone"></div>
+                    <div class="dice-green" id="green-zone"></div>
+                </div>
+                <div class="dice-cursor" id="cursor">
+                    <div class="dice-percentage" id="percentage">50%</div>
+                </div>
+                <div class="dice-arrow" id="arrow"></div>
+            </div>
+            
+            <div class="game-stats">
+                <div class="stat-box">
+                    <div>Chance de gagner</div>
+                    <div id="win-chance" style="font-size: 24px; font-weight: bold;">50%</div>
+                </div>
+                <div class="stat-box">
+                    <div>Récompense potentielle</div>
+                    <div id="potential-reward" style="font-size: 24px; font-weight: bold;">0.95 €</div>
+                </div>
+                <div class="stat-box">
+                    <div>Multiplicateur</div>
+                    <div id="multiplier" style="font-size: 24px; font-weight: bold;">1.90x</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-container" class="alert" style="display: none; margin-top: 20px;"></div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('games') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour aux jeux
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cursor = document.getElementById('cursor');
+        const redZone = document.getElementById('red-zone');
+        const greenZone = document.getElementById('green-zone');
+        const percentage = document.getElementById('percentage');
+        const winChance = document.getElementById('win-chance');
+        const potentialReward = document.getElementById('potential-reward');
+        const multiplier = document.getElementById('multiplier');
+        const betButton = document.getElementById('bet-button');
+        const betAmount = document.getElementById('bet-amount');
+        const arrow = document.getElementById('arrow');
+        const resultContainer = document.getElementById('result-container');
+        const balanceDisplay = document.getElementById('balance');
+        
+        let isDragging = false;
+        let cursorPosition = 50; // Pourcentage (0-100)
+        
+        // Initialiser la position du curseur
+        updateCursorPosition(50);
+        
+        // Fonction pour mettre à jour la position du curseur
+        function updateCursorPosition(pos) {
+            cursorPosition = pos;
+            const lineContainer = document.querySelector('.dice-line-container');
+            const lineWidth = lineContainer.offsetWidth;
+            
+            // Mettre à jour la position du curseur
+            cursor.style.left = `${pos}%`;
+            
+            // Mettre à jour les zones rouge et verte
+            redZone.style.width = `${pos}%`;
+            greenZone.style.width = `${100 - pos}%`;
+            
+            // Mettre à jour les pourcentages
+            percentage.textContent = `${pos.toFixed(1)}%`;
+            winChance.textContent = `${(100 - pos).toFixed(1)}%`;
+            
+            // Calculer la récompense potentielle
+            let reward = 0;
+            if (pos === 50) {
+                reward = parseFloat(betAmount.value) * 0.95;
+            } else if (pos !== 0) {
+                reward = (parseFloat(betAmount.value) / ((100 - pos) / 95)) / 2;
+            }
+            
+            potentialReward.textContent = `${reward.toFixed(2)} €`;
+            multiplier.textContent = `${(reward / parseFloat(betAmount.value)).toFixed(2)}x`;
+        }
+        
+        // Événements pour le curseur
+        cursor.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                const lineContainer = document.querySelector('.dice-line-container');
+                const rect = lineContainer.getBoundingClientRect();
+                let pos = ((e.clientX - rect.left) / rect.width) * 100;
+                pos = Math.max(1, Math.min(99, pos)); // Limiter entre 1% et 99%
+                updateCursorPosition(pos);
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+        
+        // Événement pour le bouton de pari
+        betButton.addEventListener('click', function() {
+            const bet = parseFloat(betAmount.value);
+            const balance = parseFloat(balanceDisplay.textContent);
+            
+            if (isNaN(bet) || bet <= 0 || bet > balance) {
+                alert('Montant de pari invalide!');
+                return;
+            }
+            
+            // Désactiver le bouton pendant le pari
+            betButton.disabled = true;
+            
+            // Envoyer la requête au serveur
+            fetch('/games/dice/bet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `bet_amount=${bet}&cursor_pos=${cursorPosition}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const result = data.result;
+                    
+                    // Afficher la flèche à la position aléatoire
+                    arrow.style.left = `${result.arrow_pos}%`;
+                    arrow.style.display = 'block';
+                    
+                    // Mettre à jour le solde
+                    balanceDisplay.textContent = result.new_balance.toFixed(2);
+                    
+                    // Afficher le résultat
+                    if (result.win) {
+                        resultContainer.className = 'alert alert-success';
+                        resultContainer.innerHTML = `<i class="fas fa-trophy"></i> <strong>Gagné!</strong> Vous avez gagné ${result.reward.toFixed(2)} €.`;
+                    } else {
+                        resultContainer.className = 'alert alert-danger';
+                        resultContainer.innerHTML = `<i class="fas fa-times-circle"></i> <strong>Perdu!</strong> Vous avez perdu ${bet.toFixed(2)} €.`;
+                    }
+                    resultContainer.style.display = 'block';
+                    
+                    // Réactiver le bouton après 2 secondes
+                    setTimeout(() => {
+                        betButton.disabled = false;
+                        arrow.style.display = 'none';
+                    }, 2000);
+                } else {
+                    alert(data.message);
+                    betButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                betButton.disabled = false;
+            });
+        });
+        
+        // Mettre à jour la récompense potentielle lorsque le montant du pari change
+        betAmount.addEventListener('input', function() {
+            updateCursorPosition(cursorPosition);
+        });
+    });
+</script>
+{% endblock %}

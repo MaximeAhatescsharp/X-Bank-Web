@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Emprunts{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Gestion des emprunts</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-hand-holding-usd terminal-icon"></i>
+                <h3 class="terminal-title">Système de prêts</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Solde disponible: {{ current_user.balance|round(2) }} €</p>
+                <p style="color: var(--text-color);">Niveau de confiance: {{ current_user.trust }}%</p>
+                <p style="color: var(--text-color);">Vous pouvez demander un prêt en fonction de votre niveau de confiance.</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Demander un emprunt</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('apply_loan') }}">
+                            <div class="form-group">
+                                <label for="amount" class="form-label">Montant (€)</label>
+                                <input type="number" id="amount" name="amount" class="form-control" min="100" step="100" required>
+                                <small style="color: var(--text-secondary);">Montant minimum: 100 €</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="duration" class="form-label">Durée (mois)</label>
+                                <input type="number" id="duration" name="duration" class="form-control" min="1" max="36" required>
+                                <small style="color: var(--text-secondary);">Durée maximum: 36 mois</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Taux d'intérêt</label>
+                                <div style="background-color: var(--background-light); padding: 10px; border-radius: var(--border-radius);">
+                                    <p>5% par an</p>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Demander l'emprunt
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Vos emprunts en cours</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if loans %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Montant</th>
+                                        <th>Taux</th>
+                                        <th>Échéance</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loan in loans %}
+                                    {% if not loan.is_paid %}
+                                    <tr>
+                                        <td>{{ loan.amount|round(2) }} €</td>
+                                        <td>{{ (loan.interest_rate * 100)|round(1) }}%</td>
+                                        <td>{{ loan.end_date.strftime('%d/%m/%Y') }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('repay_loan', loan_id=loan.id) }}">
+                                                <button type="submit" class="btn btn-primary btn-sm" {% if current_user.balance < loan.amount %}disabled{% endif %}>
+                                                    <i class="fas fa-money-bill-wave"></i> Rembourser
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <h4 style="margin-top: 20px;">Emprunts remboursés</h4>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Montant</th>
+                                        <th>Taux</th>
+                                        <th>Échéance</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loan in loans %}
+                                    {% if loan.is_paid %}
+                                    <tr>
+                                        <td>{{ loan.amount|round(2) }} €</td>
+                                        <td>{{ (loan.interest_rate * 100)|round(1) }}%</td>
+                                        <td>{{ loan.end_date.strftime('%d/%m/%Y') }}</td>
+                                        <td><span style="color: var(--success-color);">Remboursé</span></td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p>Vous n'avez pas d'emprunts en cours.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

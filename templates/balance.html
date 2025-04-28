@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}X Bank - Solde{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Votre solde</h2>
+    </div>
+    <div class="card-body">
+        <div class="terminal-section">
+            <div class="terminal-header">
+                <i class="fas fa-wallet terminal-icon"></i>
+                <h3 class="terminal-title">Informations de compte</h3>
+            </div>
+            <div class="terminal-content">
+                <p style="color: var(--primary-color);">$ Consultation du solde</p>
+                <p style="color: var(--text-color);">Utilisateur: {{ current_user.name }} {{ current_user.surname }}</p>
+                <p style="color: var(--text-color);">ID: {{ current_user.user_id }}</p>
+                <p style="color: var(--primary-color);">$ Solde actuel: <span style="font-size: 1.2em; font-weight: bold;">{{ current_user.balance|round(2) }} €</span></p>
+                <p style="color: var(--text-color);">Niveau de confiance: {{ current_user.trust }}%</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 30px;">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Résumé des investissements</h3>
+                    </div>
+                    <div class="card-body">
+                        {% set wallet = current_user.get_wallet() %}
+                        {% if wallet %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Actif</th>
+                                        <th>Parts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for asset, shares in wallet.items() %}
+                                    <tr>
+                                        <td>{{ asset }}</td>
+                                        <td>{{ shares|round(4) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <a href="{{ url_for('withdraw_investment') }}" class="btn btn-primary">
+                                <i class="fas fa-money-bill-wave"></i> Retirer des investissements
+                            </a>
+                        {% else %}
+                            <p>Vous n'avez pas d'investissements actifs.</p>
+                            <a href="{{ url_for('invest') }}" class="btn btn-primary">
+                                <i class="fas fa-chart-line"></i> Commencer à investir
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Résumé des emprunts</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if current_user.loans %}
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Montant</th>
+                                        <th>Taux</th>
+                                        <th>Échéance</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loan in current_user.loans %}
+                                    <tr>
+                                        <td>{{ loan.amount|round(2) }} €</td>
+                                        <td>{{ (loan.interest_rate * 100)|round(1) }}%</td>
+                                        <td>{{ loan.end_date.strftime('%d/%m/%Y') }}</td>
+                                        <td>{% if loan.is_paid %}Remboursé{% else %}En cours{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <a href="{{ url_for('take_loan') }}" class="btn btn-primary">
+                                <i class="fas fa-hand-holding-usd"></i> Gérer mes emprunts
+                            </a>
+                        {% else %}
+                            <p>Vous n'avez pas d'emprunts en cours.</p>
+                            <a href="{{ url_for('take_loan') }}" class="btn btn-primary">
+                                <i class="fas fa-hand-holding-usd"></i> Demander un emprunt
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
